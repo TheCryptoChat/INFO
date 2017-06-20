@@ -1,0 +1,40 @@
+INFO
+======
+
+SPECIFICATIONS
+--------------
+Type:                   POW/POS Hybrid
+
+Algorithm:              Blake2s
+
+Difficulty Retarget:    Every Block using DarkGravityWave-V3.1
+
+Block Time:             5 Minutes
+
+Block Rewards:          
+
+POW:                    100 INFO
+
+POS:                    10% Annual stake
+
+Coinbase Maturity:      10 Blocks (20 Mined)
+
+Block Reward Halving:   Never
+
+Last POW Block:         Never
+
+POS Start:              Block 1
+
+Minimum POS Age:        12 Hour(s)
+
+Maximum POS Age:        No Max
+
+Max Coins:              2,500,000 INFO
+
+Network Info:
+
+P2P Port: 42856
+RPC Port: 42857
+
+Testnet P2P Port: 42859
+Testnet RPC Port: 42858

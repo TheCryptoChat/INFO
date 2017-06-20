@@ -1,0 +1,9 @@
+Building Infocoin
+
+See doc/readme-qt.rst for instructions on building Infocoin QT,
+the intended-for-end-users, nice-graphical-interface, reference
+implementation of Infocoin.
+
+See doc/build-*.txt for instructions on building infocoind,
+the intended-for-services, no-graphical-interface, reference
+implementation of Infocoin.
