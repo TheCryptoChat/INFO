@@ -982,7 +982,7 @@ int64_t GetProofOfWorkReward(int64_t nFees, int nHeight)
 {
     int64_t nSubsidy = 100 * COIN;
 
-    if(nHeight == 1)
+    if(nHeight == 1 || nHeight == 2)
         nSubsidy = 25200000 * COIN;
 
     LogPrint("creation", "GetProofOfWorkReward() : create=%s nSubsidy=%d nHeight=%d\n", FormatMoney(nSubsidy), nSubsidy, nHeight);
