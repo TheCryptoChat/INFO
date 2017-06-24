@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = infocoin-qt
-VERSION = 1.0.0.0
+VERSION = 1.0.1.0
 INCLUDEPATH += src src/json src/qt
 QT += core gui widgets network
 DEFINES += ENABLE_WALLET
