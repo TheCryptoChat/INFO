@@ -1050,9 +1050,8 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
                    s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
                }
 
-               std::string str(s);
-               std::string rpcpass = "rpcpassword=" + str + "\n";
-               fprintf(ConfFile, rpcpass.c_str());
+               std::string str(s, 33);
+               fprintf(ConfFile, "rpcpassword=%s\n", str.c_str());
                fprintf(ConfFile, "port=42856\n");
                fprintf(ConfFile, "rpcport=42857\n");
                fprintf(ConfFile, "rpcconnect=127.0.0.1\n");

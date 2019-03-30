@@ -1148,14 +1148,6 @@ void GNTdebug()
         LogPrintf("Espers retargetted using: DGW-v3 difficulty algo \n");
         return;
     }
-    // Retarget using PPC
-    else if (retarget == DIFF_PPC)
-    {
-        // debug info for testing
-        LogPrintf("PPC per-block retarget selected \n");
-        LogPrintf("Espers retargetted using: PPC difficulty algo \n");
-        return;
-    }
     // Retarget using Terminal-Velocity
     // debug info for testing
     LogPrintf("Terminal-Velocity retarget selected \n");
@@ -1376,7 +1368,7 @@ void VRX_ThreadCurve(const CBlockIndex* pindexLast, bool fProofOfStake)
 
 unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    const CBigNum bnVelocity = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit();
+    const CBigNum bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
 
     // Check for blocks to index | Allowing for diff reset
     if (pindexLast->nHeight < VELOCITY_TDIFF+2)
@@ -1385,8 +1377,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     // Check for chain stall, allowing for min diff reset
     // If the new block's timestamp is more than 2 * target spacing
     // then allow mining of a min-difficulty block.
-    const CBlock* pblock;
-    if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
+    if (GetAdjustedTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
         // Min-diff activation after block xxxxxxx
         if (pindexLast->GetBlockTime() > VRX_MDIFF) { // ON (Saturday, March 30, 2019 2:00:00 AM GMT-07:00 PST)
             return bnVelocity.GetCompact(); // reset diff
