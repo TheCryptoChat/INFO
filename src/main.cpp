@@ -1387,7 +1387,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     const CBlock* pblock;
     if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
         // Min-diff activation after block xxxxxxx
-        if (pindexLast->GetBlockTime() > VRX_MDIFF) { // ON (Friday, March 29, 2019 9:04:40 PM GMT-07:00 PST)
+        if (pindexLast->GetBlockTime() > VRX_MDIFF) { // ON (Saturday, March 30, 2019 2:00:00 AM GMT-07:00 PST)
             return bnVelocity.GetCompact(); // reset diff
         }
     }
@@ -1399,7 +1399,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     pindexNonMinDiff = GetLastBlockIndex(pindexLast, fProofOfStake); // Differentiate PoW/PoS prev block
     bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
     // Min-diff index skip after block xxxxxxx
-    if (pindexLast->GetBlockTime() > VRX_MDIFF) { // ON (Friday, March 29, 2019 9:04:40 PM GMT-07:00 PST)
+    if (pindexLast->GetBlockTime() > VRX_MDIFF) { // ON (Saturday, March 30, 2019 2:00:00 AM GMT-07:00 PST)
         // Check whether the selected block is min-diff
         while(bnNonMinDiff.GetCompact() <= bnVelocity.GetCompact()) {
             // Index backwards until a non-min-diff block is found

@@ -81,7 +81,7 @@ static const int64_t VELOCITY_TDIFF = 316308; // Use Velocity's retargetting met
 /** VRX retarget feature toggle */
 static const int64_t VRX_FDIFF = 1553918680; // Use Velocity's retargetting method (Time).
 /** VRX retarget min-diff mining toggle */
-static const int64_t VRX_MDIFF = 1553918680; // Use Velocity's min-diff method (Time).
+static const int64_t VRX_MDIFF = 1553936400; // Use Velocity's min-diff method (Time).
 /** Block spacing preferred */
 static const int64_t BLOCK_SPACING = 5 * 60;
 /** Block spacing minimum */
