@@ -54,6 +54,10 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const int64_t MIN_TX_FEE = 0.00001 * COIN;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
 static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
+/** Minimum TX count (for relaying) */
+static const int64_t MIN_TX_COUNT = 0;
+/** Minimum TX value (for relaying) */
+static const int64_t MIN_TX_VALUE = 0.01 * COIN;
 /** No amount larger than this (in satoshi) is valid */
 static const int64_t MAX_MONEY = 2500000000 * COIN; // 2.5 Billlion INFO same as hardcap
 /** Money Range params */
@@ -75,7 +79,7 @@ inline unsigned int GetTargetSpacing(int nHeight) {return 5 * 60; }
 /** PoS Reward */
 static const int64_t COIN_YEAR_REWARD = 10 * CENT; // 10% Annual
 /** Velocity toggle block */
-static const int64_t VELOCITY_TOGGLE = 175; // Implementation of the Velocity system into the chain.
+static const int64_t VELOCITY_TOGGLE = 316328; // Implementation of the Velocity system into the chain.
 /** Velocity retarget toggle block */
 static const int64_t VELOCITY_TDIFF = 316308; // Use Velocity's retargetting method (Height).
 /** VRX retarget feature toggle */

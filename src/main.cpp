@@ -15,6 +15,7 @@
 #include "net.h"
 #include "txdb.h"
 #include "txmempool.h"
+#include "velocity.h"
 #include "ui_interface.h"
 
 using namespace std;
@@ -2422,20 +2423,23 @@ bool CBlock::AcceptBlock()
     CBlockIndex* pindexPrev = (*mi).second;
     int nHeight = pindexPrev->nHeight+1;
 
+    // Check block against Velocity parameters
+    if(Velocity_check(nHeight))
+    {
+        // Announce Velocity constraint failure
+        if(!Velocity(pindexPrev, this))
+        {
+            return DoS(100, error("AcceptBlock() : Velocity rejected block %d, required parameters not met", nHeight));
+        }
+    }
+
+    // Check for PoW cutoff
     if (IsProofOfWork() && nHeight > Params().LastPOWBlock())
         return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
 
     // Check coinbase timestamp
-    //if(IsProtocolV4(nHeight))
-    //      {
-    //        if (GetBlockTime() > FutureDriftV4((int64_t)vtx[0].nTime, nHeight))
-    //            return DoS(50, error("AcceptBlock() : coinbase timestamp is too early"));
-    //      }
-    //else
-    //      {
-            if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime, nHeight))
-                return DoS(50, error("AcceptBlock() : coinbase timestamp is too early"));
-    //      }
+    if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime, nHeight))
+        return DoS(50, error("AcceptBlock() : coinbase timestamp is too early"));
 
     // Check coinstake timestamp
     if (IsProofOfStake() && !CheckCoinStakeTimestamp(nHeight, GetBlockTime(), (int64_t)vtx[1].nTime))

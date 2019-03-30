@@ -11,6 +11,7 @@
 #include "sync.h"
 #include "base58.h"
 #include "db.h"
+#include "rpcvelocity.h"
 #include "ui_interface.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
@@ -230,6 +231,7 @@ static const CRPCCommand vRPCCommands[] =
     { "ping",                   &ping,                   true,      false,     false },
     { "getnettotals",           &getnettotals,           true,      true,      false },
     { "getdifficulty",          &getdifficulty,          true,      false,     false },
+    { "getvelocityinfo",        &getvelocityinfo,        true,      false,     false },
     { "getinfo",                &getinfo,                true,      false,     false },
     { "getrawmempool",          &getrawmempool,          true,      false,     false },
     { "getblock",               &getblock,               false,     false,     false },
@@ -247,8 +249,8 @@ static const CRPCCommand vRPCCommands[] =
     { "verifymessage",          &verifymessage,          false,     false,     false },
 
 #ifdef ENABLE_WALLET
-    { "getgenerate", 		&getgenerate, 		true, 	    false,	true },
-    { "setgenerate", 		&setgenerate, 		true, 	    false,	true },
+    { "getgenerate",            &getgenerate,            true, 	    false,     true },
+    { "setgenerate",            &setgenerate,            true, 	    false,     true },
     { "getmininginfo",          &getmininginfo,          true,      false,     false },
     { "getstakinginfo",         &getstakinginfo,         true,      false,     false },
     { "getnewaddress",          &getnewaddress,          true,      false,     true },
