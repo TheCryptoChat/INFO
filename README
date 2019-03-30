@@ -7,7 +7,7 @@ Type:                   POW/POS Hybrid
 
 Algorithm:              Blake2s
 
-Difficulty Retarget:    Every Block using DarkGravityWave-V3.1
+Difficulty Retarget:    Every Block using Velocity / VRX
 
 Block Time:             5 Minutes
 
