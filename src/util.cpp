@@ -1056,21 +1056,22 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
                fprintf(ConfFile, "rpcport=42857\n");
                fprintf(ConfFile, "rpcconnect=127.0.0.1\n");
                fprintf(ConfFile, "rpcallowip=127.0.0.1\n");
-               fprintf(ConfFile, "addnode=154.16.7.188\n");
-               fprintf(ConfFile, "addnode=104.129.16.188:42856\n");
-               fprintf(ConfFile, "addnode=45.63.123.99\n");
-               fprintf(ConfFile, "addnode=108.61.117.246\n");
-               fprintf(ConfFile, "addnode=45.76.134.160\n");
-               fprintf(ConfFile, "addnode=45.77.62.184\n");
-               fprintf(ConfFile, "addnode=108.61.220.171\n");
-               fprintf(ConfFile, "addnode=45.76.87.30\n");
-               fprintf(ConfFile, "addnode=108.61.241.170\n");
-               fprintf(ConfFile, "addnode=45.32.211.168\n");
-               fprintf(ConfFile, "addnode=45.63.71.221\n");
-               fprintf(ConfFile, "addnode=45.76.249.13\n");
-               fprintf(ConfFile, "addnode=45.77.63.194\n");
-               fprintf(ConfFile, "addnode=45.76.140.35\n");
-               fprintf(ConfFile, "addnode=108.61.199.12\n");
+               fprintf(ConfFile, "addnode=138.197.168.172:42856\n");
+               //fprintf(ConfFile, "addnode=154.16.7.188\n");
+               //fprintf(ConfFile, "addnode=104.129.16.188:42856\n");
+               //fprintf(ConfFile, "addnode=45.63.123.99\n");
+               //fprintf(ConfFile, "addnode=108.61.117.246\n");
+               //fprintf(ConfFile, "addnode=45.76.134.160\n");
+               //fprintf(ConfFile, "addnode=45.77.62.184\n");
+               //fprintf(ConfFile, "addnode=108.61.220.171\n");
+               //fprintf(ConfFile, "addnode=45.76.87.30\n");
+               //fprintf(ConfFile, "addnode=108.61.241.170\n");
+               //fprintf(ConfFile, "addnode=45.32.211.168\n");
+               //fprintf(ConfFile, "addnode=45.63.71.221\n");
+               //fprintf(ConfFile, "addnode=45.76.249.13\n");
+               //fprintf(ConfFile, "addnode=45.77.63.194\n");
+               //fprintf(ConfFile, "addnode=45.76.140.35\n");
+               //fprintf(ConfFile, "addnode=108.61.199.12\n");
 
                fclose(ConfFile);
 
