@@ -1371,7 +1371,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     const CBigNum bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
 
     // Check for blocks to index | Allowing for diff reset
-    if (pindexLast->nHeight < VELOCITY_TDIFF+2)
+    if (pindexLast->nHeight < VELOCITY_TDIFF+5)
         return bnVelocity.GetCompact(); // reset diff
 
     // Check for chain stall, allowing for min diff reset
@@ -1435,6 +1435,8 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
 
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
+    // Default with VRX
+    retarget = DIFF_VRX;
     /* DarkGravityWave v3 retarget difficulty starts initial retarget */
     if(pindexBest->nHeight < VELOCITY_TDIFF)
     {

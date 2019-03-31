@@ -79,9 +79,9 @@ inline unsigned int GetTargetSpacing(int nHeight) {return 5 * 60; }
 /** PoS Reward */
 static const int64_t COIN_YEAR_REWARD = 10 * CENT; // 10% Annual
 /** Velocity toggle block */
-static const int64_t VELOCITY_TOGGLE = 316821; // Implementation of the Velocity system into the chain.
+static const int64_t VELOCITY_TOGGLE = 316831; // Implementation of the Velocity system into the chain.
 /** Velocity retarget toggle block */
-static const int64_t VELOCITY_TDIFF = 316801; // Use Velocity's retargetting method (Height).
+static const int64_t VELOCITY_TDIFF = 316810; // Use Velocity's retargetting method (Height).
 /** VRX retarget feature toggle */
 static const int64_t VRX_FDIFF = 1553918680; // Use Velocity's retargetting method (Time). Friday, March 29, 2019 9:04:40 PM GMT-07:00 PST
 /** VRX retarget min-diff mining toggle */
