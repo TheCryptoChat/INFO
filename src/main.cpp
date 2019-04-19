@@ -1059,7 +1059,7 @@ int64_t DSrateNRM = BLOCK_SPACING;
 int64_t DSrateMAX = BLOCK_SPACING_MAX;
 int64_t FRrateDWN = DSrateNRM - 60;
 int64_t FRrateFLR = DSrateNRM - 80;
-int64_t FRrateCLNG = DSrateNRM * (3/2);
+int64_t FRrateCLNG = DSrateMAX + 60;
 int64_t difficultyfactor = 0;
 int64_t AverageDivisor = 5;
 int64_t scanheight = 6;
@@ -1319,48 +1319,44 @@ void VRX_ThreadCurve(const CBlockIndex* pindexLast, bool fProofOfStake)
 
     // Version 1.0
     //
-    int64_t nNow = pindexBest->GetBlockTime(); int64_t nThen = VRX_FDIFF; // ON (Friday, March 29, 2019 9:04:40 PM GMT-07:00 PST)
-    if(nNow > nThen){if(prevPoW < prevPoS && !fProofOfStake){if((prevPoS-prevPoW) > 3) TerminalAverage /= 3;}
+    if(prevPoW < prevPoS && !fProofOfStake){if((prevPoS-prevPoW) > 3) TerminalAverage /= 3;}
     else if(prevPoW > prevPoS && fProofOfStake){if((prevPoW-prevPoS) > 3) TerminalAverage /= 3;}
-    if(TerminalAverage < 0.5) TerminalAverage = 0.5;} // limit skew to halving
+    if(TerminalAverage < 0.5) TerminalAverage = 0.5; // limit skew to halving
 
     // Version 1.1 curve-patch
     //
-    if(pindexBest->GetBlockTime() > VRX_FDIFF) // ON (Friday, March 29, 2019 9:04:40 PM GMT-07:00 PST)
+    // Define time values
+    cntTime = BlockVelocityType->GetBlockTime();
+    prvTime = BlockVelocityType->pprev->GetBlockTime();
+
+    if(fProofOfStake)
     {
-        // Define time values
-        cntTime = BlockVelocityType->GetBlockTime();
-        prvTime = BlockVelocityType->pprev->GetBlockTime();
+        difTimePoS = cntTime - prvTime;
 
-        if(fProofOfStake)
+        // Debug print toggle
+        if(fDebug) VRXswngPoSdebug();
+        // Normal Run
+        else if(!fDebug)
         {
-            difTimePoS = cntTime - prvTime;
-
-            // Debug print toggle
-            if(fDebug) VRXswngPoSdebug();
-            // Normal Run
-            else if(!fDebug)
-            {
-                if(difTimePoS > 1 * 60 * 60) { TerminalAverage /= 2; }
-                if(difTimePoS > 2 * 60 * 60) { TerminalAverage /= 2; }
-                if(difTimePoS > 3 * 60 * 60) { TerminalAverage /= 2; }
-                if(difTimePoS > 4 * 60 * 60) { TerminalAverage /= 2; }
-            }
+            if(difTimePoS > 1 * 60 * 60) { TerminalAverage /= 2; }
+            if(difTimePoS > 2 * 60 * 60) { TerminalAverage /= 2; }
+            if(difTimePoS > 3 * 60 * 60) { TerminalAverage /= 2; }
+            if(difTimePoS > 4 * 60 * 60) { TerminalAverage /= 2; }
         }
-        else if(!fProofOfStake)
-        {
-            difTimePoW = cntTime - prvTime;
+    }
+    else if(!fProofOfStake)
+    {
+        difTimePoW = cntTime - prvTime;
 
-            // Debug print toggle
-            if(fDebug) VRXswngPoWdebug();
-            // Normal Run
-            else if(!fDebug)
-            {
-                if(difTimePoW > 1 * 60 * 60) { TerminalAverage /= 2; }
-                if(difTimePoW > 2 * 60 * 60) { TerminalAverage /= 2; }
-                if(difTimePoW > 3 * 60 * 60) { TerminalAverage /= 2; }
-                if(difTimePoW > 4 * 60 * 60) { TerminalAverage /= 2; }
-            }
+        // Debug print toggle
+        if(fDebug) VRXswngPoWdebug();
+        // Normal Run
+        else if(!fDebug)
+        {
+            if(difTimePoW > 1 * 60 * 60) { TerminalAverage /= 2; }
+            if(difTimePoW > 2 * 60 * 60) { TerminalAverage /= 2; }
+            if(difTimePoW > 3 * 60 * 60) { TerminalAverage /= 2; }
+            if(difTimePoW > 4 * 60 * 60) { TerminalAverage /= 2; }
         }
     }
     return;
@@ -1374,34 +1370,8 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     if (pindexLast->nHeight < VELOCITY_TDIFF+5)
         return bnVelocity.GetCompact(); // reset diff
 
-    // Check for chain stall, allowing for min diff reset
-    // If the new block's timestamp is more than 2 * target spacing
-    // then allow mining of a min-difficulty block.
-    if (GetAdjustedTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
-        // Min-diff activation after block xxxxxxx
-        if (pindexLast->GetBlockTime() > VRX_MDIFF) { // ON (Monday, April 1, 2019 4:50:00 PM GMT-07:00 PST)
-            return bnVelocity.GetCompact(); // reset diff
-        }
-    }
-
-    // Only select last non-min-diff block when retargeting
-    // This negates a chain reset when a min-diff block is allowed
-    //
-    // Set min-diff check values
-    pindexNonMinDiff = GetLastBlockIndex(pindexLast, fProofOfStake); // Differentiate PoW/PoS prev block
-    bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
-    // Min-diff index skip after block xxxxxxx
-    if (pindexLast->GetBlockTime() > VRX_MDIFF) { // ON (Monday, April 1, 2019 4:50:00 PM GMT-07:00 PST)
-        // Check whether the selected block is min-diff
-        while(bnNonMinDiff.GetCompact() <= bnVelocity.GetCompact()) {
-            // Index backwards until a non-min-diff block is found
-            pindexNonMinDiff = pindexNonMinDiff->pprev;
-            bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
-        }
-    }
-
-    // Log PoW/PoS prev block
-    BlockVelocityType = pindexNonMinDiff;
+    // Differentiate PoW/PoS prev block
+    BlockVelocityType = GetLastBlockIndex(pindexLast, fProofOfStake);
 
     // Run VRX threadcurve
     VRX_ThreadCurve(pindexLast, fProofOfStake);
