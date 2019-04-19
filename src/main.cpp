@@ -996,6 +996,10 @@ int64_t GetProofOfWorkReward(int64_t nFees, int nHeight)
         return nSubsidy + nFees;
     }
 
+    if(pindexBest->GetBlockTime() > 1555873251){// Sunday, April 21, 2019 12:00:51 PM GMT-07:00
+        nSubsidy /= 2;
+    }
+
     return nSubsidy + nFees;
 }
 
