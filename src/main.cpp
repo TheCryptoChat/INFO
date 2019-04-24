@@ -1077,9 +1077,13 @@ int64_t prevPoS = 0; // hybrid value
 const CBlockIndex* pindexPrev = 0;
 const CBlockIndex* BlockVelocityType = 0;
 const CBlockIndex* pindexNonMinDiff = 0;
+const CBlockIndex* pindexMinPoSDiff = 0;
+const CBlockIndex* pindexMinPoWDiff = 0;
 CBigNum bnOld;
 CBigNum bnNew;
 CBigNum bnNonMinDiff;
+CBigNum bnMinPoSDiff;
+CBigNum bnMinPoWDiff;
 unsigned int retarget = DIFF_VRX; // Default with VRX
 uint64_t cntTime = 0;
 uint64_t prvTime = 0;
@@ -1384,7 +1388,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     if (GetAdjustedTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
         // Min-diff activation after block xxxxxxx
         if (nLiveForkToggle > 0) {
-            if (pindexLast->GetBlockTime() > nLiveForkToggle) { // Selectable
+            if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
                 return bnVelocity.GetCompact(); // reset diff
             }
         }
@@ -1395,18 +1399,59 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     //
     // Set min-diff check values
     pindexNonMinDiff = GetLastBlockIndex(pindexLast, fProofOfStake); // Differentiate PoW/PoS prev block
+    pindexMinPoSDiff = pindexLast; // Set Min PoS diff block
+    pindexMinPoWDiff = pindexLast; // Set Min PoW diff block
     bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
-    // Min-diff index skip after block xxxxxxx
-    if (nLiveForkToggle > 0) {
-        if (pindexLast->GetBlockTime() > nLiveForkToggle) { // Selectable
-            // Check whether the selected block is min-diff
-            while(bnNonMinDiff.GetCompact() <= bnVelocity.GetCompact()) {
-                // Index backwards until a non-min-diff block is found
-                pindexNonMinDiff = pindexNonMinDiff->pprev;
-                bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
-                // Break out of loop once non-min-diff is found
-                if (bnNonMinDiff.GetCompact() > bnVelocity.GetCompact()) {
-                    break;
+    int64_t nMinDiffTemptIndexBlock = 0;
+    int64_t nMinPoSDiffIndexBlock = pindexLast->nHeight - 110;
+    int64_t nMinPoWDiffIndexBlock = pindexLast->nHeight - 1;
+    // Index back to first non-min PoW/PoS diff for reference
+    if(fProofOfStake){
+        while(nMinPoSDiffIndexBlock > nMinDiffTemptIndexBlock){
+            pindexMinPoSDiff = pindexMinPoSDiff->pprev;
+            if(pindexMinPoSDiff->nHeight <= 110){
+                break;
+            }
+            nMinDiffTemptIndexBlock ++;
+        }
+        bnMinPoSDiff.SetCompact(pindexMinPoSDiff->nBits);
+        // Min-diff index skip after block xxxxxxx
+        if (nLiveForkToggle > 0) {
+            if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
+                // Check whether the selected block is min-diff
+                while(bnNonMinDiff.GetCompact() <= bnMinPoSDiff.GetCompact()) {
+                    // Index backwards until a non-min-diff block is found
+                    pindexNonMinDiff = pindexNonMinDiff->pprev;
+                    bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
+                    // Break out of loop once non-min-diff is found, stop at limiter
+                    if (bnNonMinDiff.GetCompact() > bnMinPoSDiff.GetCompact() || pindexNonMinDiff->nHeight < nLiveForkToggle) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else{
+        while(nMinPoWDiffIndexBlock > nMinDiffTemptIndexBlock){
+            pindexMinPoWDiff = pindexMinPoWDiff->pprev;
+            if(pindexMinPoWDiff->nHeight <= 1){
+                break;
+            }
+            nMinDiffTemptIndexBlock ++;
+        }
+        bnMinPoWDiff.SetCompact(pindexMinPoWDiff->nBits);
+        // Min-diff index skip after block xxxxxxx
+        if (nLiveForkToggle > 0) {
+            if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
+                // Check whether the selected block is min-diff
+                while(bnNonMinDiff.GetCompact() <= bnMinPoWDiff.GetCompact()) {
+                    // Index backwards until a non-min-diff block is found
+                    pindexNonMinDiff = pindexNonMinDiff->pprev;
+                    bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
+                    // Break out of loop once non-min-diff is found, stop at limiter
+                    if (bnNonMinDiff.GetCompact() > bnMinPoWDiff.GetCompact() || pindexNonMinDiff->nHeight < nLiveForkToggle) {
+                        break;
+                    }
                 }
             }
         }
