@@ -996,8 +996,10 @@ int64_t GetProofOfWorkReward(int64_t nFees, int nHeight)
         return nSubsidy + nFees;
     }
 
-    if(pindexBest->GetBlockTime() > 1555873251){// Sunday, April 21, 2019 12:00:51 PM GMT-07:00
-        nSubsidy /= 2;
+    if(nLiveForkToggle > 0){
+        if(pindexBest->nHeight > nLiveForkToggle){// Selectable
+            nSubsidy /= 2;
+        }
     }
 
     return nSubsidy + nFees;
@@ -1083,6 +1085,8 @@ uint64_t cntTime = 0;
 uint64_t prvTime = 0;
 uint64_t difTimePoS = 0;
 uint64_t difTimePoW = 0;
+int64_t VELOCITY_TOGGLE = 0;
+int64_t VELOCITY_TDIFF = 0;
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1374,8 +1378,42 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     if (pindexLast->nHeight < VELOCITY_TDIFF+5)
         return bnVelocity.GetCompact(); // reset diff
 
-    // Differentiate PoW/PoS prev block
-    BlockVelocityType = GetLastBlockIndex(pindexLast, fProofOfStake);
+    // Check for chain stall, allowing for min diff reset
+    // If the new block's timestamp is more than 2 * target spacing
+    // then allow mining of a min-difficulty block.
+    if (GetAdjustedTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
+        // Min-diff activation after block xxxxxxx
+        if (nLiveForkToggle > 0) {
+            if (pindexLast->GetBlockTime() > nLiveForkToggle) { // Selectable
+                return bnVelocity.GetCompact(); // reset diff
+            }
+        }
+    }
+
+    // Only select last non-min-diff block when retargeting
+    // This negates a chain reset when a min-diff block is allowed
+    //
+    // Set min-diff check values
+    pindexNonMinDiff = GetLastBlockIndex(pindexLast, fProofOfStake); // Differentiate PoW/PoS prev block
+    bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
+    // Min-diff index skip after block xxxxxxx
+    if (nLiveForkToggle > 0) {
+        if (pindexLast->GetBlockTime() > nLiveForkToggle) { // Selectable
+            // Check whether the selected block is min-diff
+            while(bnNonMinDiff.GetCompact() <= bnVelocity.GetCompact()) {
+                // Index backwards until a non-min-diff block is found
+                pindexNonMinDiff = pindexNonMinDiff->pprev;
+                bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
+                // Break out of loop once non-min-diff is found
+                if (bnNonMinDiff.GetCompact() > bnVelocity.GetCompact()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Log PoW/PoS prev block
+    BlockVelocityType = pindexNonMinDiff;
 
     // Run VRX threadcurve
     VRX_ThreadCurve(pindexLast, fProofOfStake);
@@ -1409,12 +1447,22 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
 
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    // Default with VRX
-    retarget = DIFF_VRX;
     /* DarkGravityWave v3 retarget difficulty starts initial retarget */
-    if(pindexBest->nHeight < VELOCITY_TDIFF)
+    retarget = DIFF_DGW;
+
+    // Initially turn off VRX/Velocity fork toggles
+    VELOCITY_TDIFF = 9999999;
+    VELOCITY_TOGGLE = 9999999;
+
+    if(nLiveForkToggle > 0)
     {
-        retarget = DIFF_DGW;
+        VELOCITY_TDIFF = nLiveForkToggle;
+        VELOCITY_TOGGLE = nLiveForkToggle+50;
+        if(pindexBest->nHeight > nLiveForkToggle)
+        {
+            // Default with VRX
+            retarget = DIFF_VRX;
+        }
     }
     // Retarget using DGW-v3
     if (retarget == DIFF_DGW)

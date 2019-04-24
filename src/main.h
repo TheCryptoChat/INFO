@@ -79,9 +79,9 @@ inline unsigned int GetTargetSpacing(int nHeight) {return 5 * 60; }
 /** PoS Reward */
 static const int64_t COIN_YEAR_REWARD = 10 * CENT; // 10% Annual
 /** Velocity toggle block */
-static const int64_t VELOCITY_TOGGLE = 321880; // Implementation of the Velocity system into the chain.
+extern int64_t VELOCITY_TOGGLE; // Implementation of the Velocity system into the chain.
 /** Velocity retarget toggle block */
-static const int64_t VELOCITY_TDIFF = 321868; // Use Velocity's retargetting method (Height).
+extern int64_t VELOCITY_TDIFF; // Use Velocity's retargetting method (Height).
 /** Block spacing preferred */
 static const int64_t BLOCK_SPACING = 5 * 60;
 /** Block spacing minimum */

@@ -15,8 +15,8 @@
 class CBlock;
 class CBlockIndex;
 
-static const          int VELOCITY_HEIGHT[]    = { VELOCITY_TOGGLE }; /** Height to start Velocity */
-static const          int VELOCITY_TERMINAL[]  = { VELOCITY_TDIFF }; /** Height to start Velocity retargetting */
+static                int64_t VELOCITY_HEIGHT[]    = { VELOCITY_TOGGLE }; /** Height to start Velocity */
+static                int64_t VELOCITY_TERMINAL[]  = { VELOCITY_TDIFF }; /** Height to start Velocity retargetting */
 static const          int VELOCITY_MAX_RATE[]  = { BLOCK_SPACING_MAX }; /** Rate to Velocity in seconds */
 static const          int VELOCITY_RATE[]      = { BLOCK_SPACING }; /** Rate to Velocity in seconds */
 static const          int VELOCITY_MIN_RATE[]  = { BLOCK_SPACING_MIN }; /** Rate to Velocity in seconds */
