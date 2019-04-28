@@ -1379,7 +1379,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     const CBigNum bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
 
     // Check for blocks to index | Allowing for diff reset
-    if (pindexLast->nHeight < nLiveForkToggle+5)
+    if (pindexLast->nHeight-5 < nLiveForkToggle+5)
         return bnVelocity.GetCompact(); // reset diff
 
     // Check for chain stall, allowing for min diff reset
