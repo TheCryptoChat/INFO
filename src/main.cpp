@@ -1379,7 +1379,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     const CBigNum bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
 
     // Check for blocks to index | Allowing for diff reset
-    if (pindexLast->nHeight-5 < nLiveForkToggle+5)
+    if (pindexLast->nHeight < nLiveForkToggle+5)
         return bnVelocity.GetCompact(); // reset diff
 
     // Check for chain stall, allowing for min diff reset
@@ -1492,22 +1492,20 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
 
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    /* DarkGravityWave v3 retarget difficulty starts initial retarget */
-    retarget = DIFF_DGW;
+    // Default with VRX
+    retarget = DIFF_VRX;
 
-    // Initially turn off VRX/Velocity fork toggles
-    VELOCITY_TDIFF = 9999999;
-    VELOCITY_TOGGLE = 9999999;
+    // Initially turn on VRX/Velocity fork toggles
+    VELOCITY_TDIFF = nLiveForkToggle;
+    VELOCITY_TOGGLE = nLiveForkToggle+50;
 
-    if(nLiveForkToggle > 0)
+    if(pindexBest->nHeight < nLiveForkToggle || nLiveForkToggle == 0)
     {
-        VELOCITY_TDIFF = nLiveForkToggle;
-        VELOCITY_TOGGLE = nLiveForkToggle+50;
-        if(pindexBest->nHeight > nLiveForkToggle)
-        {
-            // Default with VRX
-            retarget = DIFF_VRX;
-        }
+        // Turn off VRX/Velocity fork toggles
+        VELOCITY_TDIFF = 9999999;
+        VELOCITY_TOGGLE = 9999999;
+        /* DarkGravityWave v3 retarget difficulty starts initial retarget */
+        retarget = DIFF_DGW;
     }
     // Retarget using DGW-v3
     if (retarget == DIFF_DGW)
