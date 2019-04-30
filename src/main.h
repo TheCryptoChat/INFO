@@ -65,13 +65,13 @@ inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MO
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 /** Protocol 2.1 toggle */
-inline bool IsProtocolV2_1(int64_t nTime) { return TestNet() || nTime > 1555873251; } // Sunday, April 21, 2019 12:00:51 PM GMT-07:00
+inline bool IsProtocolV2_1(int64_t nTime) { return TestNet() || nTime > 9993058800; } // OFF
 /** FutureDrift parameters */
 inline int64_t TimeDrift() { return 15 * 60; } // Default time drift window
 /** Initial future drift */
 inline int64_t FutureDriftV1(int64_t nTime) { return nTime + TimeDrift(); } // Protocol-v2
 /** Tightened future drift */
-inline int64_t FutureDriftV2(int64_t nTime) { return nTime + (TimeDrift() / 3); } // Protocol-v2.1
+inline int64_t FutureDriftV2(int64_t nTime) { return nTime + (TimeDrift() - (5 * 60)); } // Protocol-v2.1
 /** FutureDrift returned value */
 inline int64_t FutureDrift(int64_t nTime, int nHeight) { return IsProtocolV2_1(nHeight) ? FutureDriftV2(nTime) : FutureDriftV1(nTime); }
 /** Block target spacing defines */
