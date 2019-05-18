@@ -1492,21 +1492,20 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
 
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    // Default with VRX
-    retarget = DIFF_VRX;
+    /* DarkGravityWave v3 retarget difficulty starts initial retarget */
+    retarget = DIFF_DGW;
 
-    // Initially turn on VRX/Velocity fork toggles
-    VELOCITY_TDIFF = nLiveForkToggle;
-    VELOCITY_TOGGLE = nLiveForkToggle+50;
-
-    if(pindexBest->nHeight < nLiveForkToggle || nLiveForkToggle == 0)
+    if(pindexLast->nHeight+5 >= nLiveForkToggle)
     {
-        // Turn off VRX/Velocity fork toggles
-        VELOCITY_TDIFF = 9999999;
-        VELOCITY_TOGGLE = 9999999;
-        /* DarkGravityWave v3 retarget difficulty starts initial retarget */
-        retarget = DIFF_DGW;
+        VELOCITY_TDIFF = nLiveForkToggle;
+        VELOCITY_TOGGLE = nLiveForkToggle+50;
+        retarget = DIFF_VRX;
     }
+
+    // Turn off VRX/Velocity fork toggles
+    VELOCITY_TDIFF = 9999999;
+    VELOCITY_TOGGLE = 9999999;
+
     // Retarget using DGW-v3
     if (retarget == DIFF_DGW)
     {
@@ -1514,6 +1513,15 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
         if(fDebug) GNTdebug();
         return DarkGravityWave(pindexLast, fProofOfStake);
     }
+
+    // Retarget using VRX
+    if (retarget == DIFF_VRX)
+    {
+        // debug info for testing
+        if(fDebug) GNTdebug();
+        return VRX_Retarget(pindexLast, fProofOfStake);
+    }
+
     // Retarget using Terminal-Velocity
     // debug info for testing
     if(fDebug) GNTdebug();
