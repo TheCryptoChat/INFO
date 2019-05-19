@@ -1379,16 +1379,20 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     const CBigNum bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
 
     // Check for blocks to index | Allowing for diff reset
-    if (pindexLast->nHeight < nLiveForkToggle+5)
+    if (pindexLast->nHeight+1 < nLiveForkToggle+5) {
+        LogPrintf("Section 5: Cleared \n");
         return bnVelocity.GetCompact(); // reset diff
+    }
 
     // Check for chain stall, allowing for min diff reset
     // If the new block's timestamp is more than 2 * target spacing
     // then allow mining of a min-difficulty block.
     if (GetAdjustedTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
+        LogPrintf("Section 6: Cleared \n");
         // Min-diff activation after block xxxxxxx
         if (nLiveForkToggle > 0) {
-            if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
+            if (pindexLast->nHeight+1 > nLiveForkToggle) { // Selectable
+                LogPrintf("Section 7: Cleared \n");
                 return bnVelocity.GetCompact(); // reset diff
             }
         }
@@ -1407,14 +1411,17 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     int64_t nMinPoWDiffIndexBlock = pindexLast->nHeight - 1;
     // Index back to first non-min PoW/PoS diff for reference
     if(fProofOfStake){
+        LogPrintf("Section 8: Cleared \n");
         while(nMinPoSDiffIndexBlock > nMinDiffTemptIndexBlock){
             pindexMinPoSDiff = pindexMinPoSDiff->pprev;
+            // LogPrintf("Section 9: Cleared, block index height: %u \n", uint64_t(pindexMinPoSDiff->nHeight));
             if(pindexMinPoSDiff->nHeight <= 110){
                 break;
             }
             nMinDiffTemptIndexBlock ++;
         }
         bnMinPoSDiff.SetCompact(pindexMinPoSDiff->nBits);
+        LogPrintf("Section 10: Cleared, block nbits value: %u \n", uint64_t(pindexMinPoSDiff->nBits));
         // Min-diff index skip after block xxxxxxx
         if (nLiveForkToggle > 0) {
             if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
@@ -1423,6 +1430,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
                     // Index backwards until a non-min-diff block is found
                     pindexNonMinDiff = pindexNonMinDiff->pprev;
                     bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
+                    LogPrintf("Section 11: Cleared, selected block diff: %u | indexed block diff: %u \n", uint64_t(bnNonMinDiff.GetCompact()), uint64_t(bnMinPoSDiff.GetCompact()));
                     // Break out of loop once non-min-diff is found, stop at limiter
                     if (bnNonMinDiff.GetCompact() > bnMinPoSDiff.GetCompact() || pindexNonMinDiff->nHeight < nLiveForkToggle) {
                         break;
@@ -1432,14 +1440,17 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
         }
     }
     else{
+        LogPrintf("Section 12: Cleared \n");
         while(nMinPoWDiffIndexBlock > nMinDiffTemptIndexBlock){
             pindexMinPoWDiff = pindexMinPoWDiff->pprev;
+            // LogPrintf("Section 13: Cleared, block index height: %u \n", uint64_t(pindexMinPoWDiff->nHeight));
             if(pindexMinPoWDiff->nHeight <= 1){
                 break;
             }
             nMinDiffTemptIndexBlock ++;
         }
         bnMinPoWDiff.SetCompact(pindexMinPoWDiff->nBits);
+        LogPrintf("Section 14: Cleared, block nbits value: %u \n", uint64_t(pindexMinPoWDiff->nBits));
         // Min-diff index skip after block xxxxxxx
         if (nLiveForkToggle > 0) {
             if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
@@ -1448,6 +1459,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
                     // Index backwards until a non-min-diff block is found
                     pindexNonMinDiff = pindexNonMinDiff->pprev;
                     bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
+                    LogPrintf("Section 11: Cleared, selected block diff: %u | indexed block diff: %u \n", uint64_t(bnNonMinDiff.GetCompact()), uint64_t(bnMinPoWDiff.GetCompact()));
                     // Break out of loop once non-min-diff is found, stop at limiter
                     if (bnNonMinDiff.GetCompact() > bnMinPoWDiff.GetCompact() || pindexNonMinDiff->nHeight < nLiveForkToggle) {
                         break;
@@ -1494,21 +1506,25 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 {
     /* DarkGravityWave v3 retarget difficulty starts initial retarget */
     retarget = DIFF_DGW;
+    LogPrintf("Section 1: Cleared \n");
 
-    if(pindexLast->nHeight+5 >= nLiveForkToggle)
+    if(pindexLast->nHeight+1 >= nLiveForkToggle)
     {
+        LogPrintf("Section 2: Cleared \n");
         VELOCITY_TDIFF = nLiveForkToggle;
         VELOCITY_TOGGLE = nLiveForkToggle+50;
         retarget = DIFF_VRX;
     }
 
     // Turn off VRX/Velocity fork toggles
+    LogPrintf("Section 3: Cleared \n");
     VELOCITY_TDIFF = 9999999;
     VELOCITY_TOGGLE = 9999999;
 
     // Retarget using DGW-v3
     if (retarget == DIFF_DGW)
     {
+        LogPrintf("Section 90: Cleared \n");
         // debug info for testing
         if(fDebug) GNTdebug();
         return DarkGravityWave(pindexLast, fProofOfStake);
@@ -1517,6 +1533,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     // Retarget using VRX
     if (retarget == DIFF_VRX)
     {
+        LogPrintf("Section 4: Cleared \n");
         // debug info for testing
         if(fDebug) GNTdebug();
         return VRX_Retarget(pindexLast, fProofOfStake);
@@ -1524,6 +1541,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 
     // Retarget using Terminal-Velocity
     // debug info for testing
+    LogPrintf("Section 100: Cleared \n");
     if(fDebug) GNTdebug();
     return VRX_Retarget(pindexLast, fProofOfStake);
 }
