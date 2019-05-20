@@ -1379,7 +1379,7 @@ unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
     const CBigNum bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
 
     // Check for blocks to index | Allowing for diff reset
-    if (pindexLast->nHeight+1 < nLiveForkToggle+5) {
+    if (pindexLast->nHeight-5 <= nLiveForkToggle) {
         LogPrintf("Section 5: Cleared \n");
         return bnVelocity.GetCompact(); // reset diff
     }
@@ -1508,12 +1508,15 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     retarget = DIFF_DGW;
     LogPrintf("Section 1: Cleared \n");
 
-    if(pindexLast->nHeight+1 >= nLiveForkToggle)
+    if(nLiveForkToggle != 0)
     {
-        LogPrintf("Section 2: Cleared \n");
-        VELOCITY_TDIFF = nLiveForkToggle;
-        VELOCITY_TOGGLE = nLiveForkToggle+50;
-        retarget = DIFF_VRX;
+        if(pindexLast->nHeight+1 >= nLiveForkToggle)
+        {
+            LogPrintf("Section 2: Cleared \n");
+            VELOCITY_TDIFF = nLiveForkToggle;
+            VELOCITY_TOGGLE = nLiveForkToggle+50;
+            retarget = DIFF_VRX;
+        }
     }
 
     // Turn off VRX/Velocity fork toggles
