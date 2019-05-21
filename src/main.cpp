@@ -1508,21 +1508,21 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     retarget = DIFF_DGW;
     LogPrintf("Section 1: Cleared \n");
 
+    // Turn off VRX/Velocity fork toggles
+    LogPrintf("Section 2: Cleared \n");
+    VELOCITY_TDIFF = 9999999;
+    VELOCITY_TOGGLE = 9999999;
+
     if(nLiveForkToggle != 0)
     {
         if(pindexLast->nHeight+1 >= nLiveForkToggle)
         {
-            LogPrintf("Section 2: Cleared \n");
+            LogPrintf("Section 3: Cleared \n");
             VELOCITY_TDIFF = nLiveForkToggle;
             VELOCITY_TOGGLE = nLiveForkToggle+50;
             retarget = DIFF_VRX;
         }
     }
-
-    // Turn off VRX/Velocity fork toggles
-    LogPrintf("Section 3: Cleared \n");
-    VELOCITY_TDIFF = 9999999;
-    VELOCITY_TOGGLE = 9999999;
 
     // Retarget using DGW-v3
     if (retarget == DIFF_DGW)
