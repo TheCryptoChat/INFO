@@ -156,12 +156,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle);
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles);
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
-void VRXswngPoSdebug();
-void VRXswngPoWdebug();
+void VRXswngdebug();
 void VRXdebug();
 void GNTdebug();
 void VRX_BaseEngine(const CBlockIndex* pindexLast, bool fProofOfStake);
+void VRX_Simulate_Retarget();
 void VRX_ThreadCurve(const CBlockIndex* pindexLast, bool fProofOfStake);
+void VRX_Dry_Run(const CBlockIndex* pindexLast);
 unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
 int64_t GetProofOfWorkReward(int64_t nFees, int nHeight);

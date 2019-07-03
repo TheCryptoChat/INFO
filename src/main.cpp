@@ -1053,6 +1053,7 @@ double VRFup2 = 1.5;
 double VRFup3 = 2;
 double TerminalAverage = 0;
 double TerminalFactor = 10000;
+double debugTerminalAverage = 0;
 CBigNum newBN = 0;
 CBigNum oldBN = 0;
 int64_t VLrate1 = 0;
@@ -1062,10 +1063,10 @@ int64_t VLrate4 = 0;
 int64_t VLrate5 = 0;
 int64_t VLRtemp = 0;
 int64_t DSrateNRM = BLOCK_SPACING;
-int64_t DSrateMAX = BLOCK_SPACING_MAX;
+int64_t DSrateMAX = DSrateNRM + 60;
 int64_t FRrateDWN = DSrateNRM - 60;
-int64_t FRrateFLR = DSrateNRM - 80;
-int64_t FRrateCLNG = DSrateMAX + 60;
+int64_t FRrateFLR = DSrateNRM - 90;
+int64_t FRrateCLNG = DSrateNRM + 90;
 int64_t difficultyfactor = 0;
 int64_t AverageDivisor = 5;
 int64_t scanheight = 6;
@@ -1074,21 +1075,23 @@ int64_t scantime_1 = 0;
 int64_t scantime_2 = 0;
 int64_t prevPoW = 0; // hybrid value
 int64_t prevPoS = 0; // hybrid value
-const CBlockIndex* pindexPrev = 0;
-const CBlockIndex* BlockVelocityType = 0;
-const CBlockIndex* pindexNonMinDiff = 0;
-const CBlockIndex* pindexMinPoSDiff = 0;
-const CBlockIndex* pindexMinPoWDiff = 0;
-CBigNum bnOld;
-CBigNum bnNew;
-CBigNum bnNonMinDiff;
-CBigNum bnMinPoSDiff;
-CBigNum bnMinPoWDiff;
-unsigned int retarget = DIFF_VRX; // Default with VRX
+uint64_t blkTime = 0;
 uint64_t cntTime = 0;
 uint64_t prvTime = 0;
-uint64_t difTimePoS = 0;
-uint64_t difTimePoW = 0;
+uint64_t difTime = 0;
+uint64_t minuteRounds = 0;
+uint64_t difCurve = 0;
+uint64_t debugminuteRounds = 0;
+uint64_t debugDifCurve = 0;
+bool fDryRun;
+bool fCRVreset;
+const CBlockIndex* pindexPrev = 0;
+const CBlockIndex* BlockVelocityType = 0;
+CBigNum bnVelocity = 0;
+CBigNum bnOld;
+CBigNum bnNew;
+std::string difType ("");
+unsigned int retarget = DIFF_VRX; // Default with VRX
 int64_t VELOCITY_TOGGLE = 0;
 int64_t VELOCITY_TDIFF = 0;
 
@@ -1102,29 +1105,27 @@ int64_t VELOCITY_TDIFF = 0;
 // Debug log printing
 //
 
-void VRXswngPoSdebug()
+void VRXswngdebug()
 {
     // Print for debugging
-    LogPrintf("Previously discovered PoS block: %u: \n",prvTime);
-    LogPrintf("Current block-time: %u: \n",cntTime);
-    LogPrintf("Time since last PoS block: %u: \n",difTimePoS);
-    if(difTimePoS > 1 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoS is greater than 1 Hours: %u \n",cntTime);}
-    if(difTimePoS > 2 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoS is greater than 2 Hours: %u \n",cntTime);}
-    if(difTimePoS > 3 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoS is greater than 3 Hours: %u \n",cntTime);}
-    if(difTimePoS > 4 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoS is greater than 4 Hours: %u \n",cntTime);}
-    return;
-}
+    LogPrintf("Previously discovered %s block: %u: \n",difType.c_str(),prvTime);
+    LogPrintf("Current block-time: %u: \n",difType.c_str(),cntTime);
+    LogPrintf("Time since last %s block: %u: \n",difType.c_str(),difTime);
+    debugminuteRounds = minuteRounds;
+    debugTerminalAverage = TerminalAverage;
+    debugDifCurve = difCurve;
+    while(difTime > (debugminuteRounds * 60 * 60)) {
+        debugTerminalAverage /= debugDifCurve;
+        LogPrintf("diffTime%s is greater than %u Hours: %u \n",difType.c_str(),debugminuteRounds,cntTime);
+        LogPrintf("Difficulty will be multiplied by: %d \n",debugTerminalAverage);
+        // Break loop after 5 hours, otherwise time threshold will auto-break loop
+        if (debugminuteRounds > 5){
+            break;
+        }
+        debugDifCurve ++;
+        debugminuteRounds ++;
+    }
 
-void VRXswngPoWdebug()
-{
-    // Print for debugging
-    LogPrintf("Previously discovered PoW block: %u: \n",prvTime);
-    LogPrintf("Current block-time: %u: \n",cntTime);
-    LogPrintf("Time since last PoW block: %u: \n",difTimePoW);
-    if(difTimePoW > 1 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoW is greater than 1 Hours: %u \n",cntTime);}
-    if(difTimePoW > 2 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoW is greater than 2 Hours: %u \n",cntTime);}
-    if(difTimePoW > 3 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoW is greater than 3 Hours: %u \n",cntTime);}
-    if(difTimePoW > 4 * 60 * 60) { TerminalAverage /= 2; LogPrintf("diffTimePoW is greater than 4 Hours: %u \n",cntTime);}
     return;
 }
 
@@ -1152,14 +1153,14 @@ void VRXdebug()
 void GNTdebug()
 {
     // Print for debugging
-    // Retarget using DGW-v3
-    if (retarget == DIFF_DGW)
+    // Retarget ignoring invalid selection
+    if (retarget != DIFF_VRX)
     {
         // debug info for testing
-        LogPrintf("DarkGravityWave-v3 retarget selected \n");
-        LogPrintf("Espers retargetted using: DGW-v3 difficulty algo \n");
+        LogPrintf("GetNextTargetRequired() : Legacy retarget selection, pre-upgragde \n");
         return;
     }
+
     // Retarget using Terminal-Velocity
     // debug info for testing
     LogPrintf("Terminal-Velocity retarget selected \n");
@@ -1242,9 +1243,9 @@ unsigned int DarkGravityWave(const CBlockIndex* pindexLast, bool fProofOfStake)
 //
 
 //
-// This is VRX revised implementation
+// This is VRX (v3.5) revised implementation
 //
-// Terminal-Velocity-RateX, v10-Beta-R8, written by Jonathan Dan Zaretsky - cryptocoderz@gmail.com
+// Terminal-Velocity-RateX, v10-Beta-R9, written by Jonathan Dan Zaretsky - cryptocoderz@gmail.com
 void VRX_BaseEngine(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
        // Set base values
@@ -1303,21 +1304,32 @@ void VRX_BaseEngine(const CBlockIndex* pindexLast, bool fProofOfStake)
            else if (scanblocks < scanheight-0) VLF5 = VLFtmp;
            // Log hybrid block type
            //
+           // v1.0
+           if     (fProofOfStake) prevPoS ++;
+           else if(!fProofOfStake) prevPoW ++;
            // v1.1
-           if(pindexPrev->IsProofOfStake())
-           {
-               prevPoS ++;
-           }
-           else if(pindexPrev->IsProofOfWork())
-           {
-               prevPoW ++;
-           }
+           if(pindexPrev->IsProofOfStake()) { prevPoS ++; }
+           else if(pindexPrev->IsProofOfWork()) { prevPoW ++; }
+
            // move up per scan round
            scanblocks ++;
        }
        // Final mathematics
        TerminalAverage = (VLF1 + VLF2 + VLF3 + VLF4 + VLF5) / AverageDivisor;
        return;
+}
+
+void VRX_Simulate_Retarget()
+{
+    // Perform retarget simulation
+    TerminalFactor *= TerminalAverage;
+    difficultyfactor = TerminalFactor;
+    bnOld.SetCompact(BlockVelocityType->nBits);
+    bnNew = bnOld / difficultyfactor;
+    bnNew *= 10000;
+    // Reset TerminalFactor for actual retarget
+    TerminalFactor = 10000;
+    return;
 }
 
 void VRX_ThreadCurve(const CBlockIndex* pindexLast, bool fProofOfStake)
@@ -1338,153 +1350,90 @@ void VRX_ThreadCurve(const CBlockIndex* pindexLast, bool fProofOfStake)
     // Version 1.1 curve-patch
     //
     // Define time values
+    blkTime = pindexLast->GetBlockTime();
     cntTime = BlockVelocityType->GetBlockTime();
     prvTime = BlockVelocityType->pprev->GetBlockTime();
+    difTime = cntTime - prvTime;
+    minuteRounds = 7;
+    difCurve = 2;
+    fCRVreset = false;
 
-    if(fProofOfStake)
+    // Debug print toggle
+    if(fProofOfStake) {
+        difType = "PoS";
+    } else {
+        difType = "PoW";
+    }
+    if(fDebug) VRXswngdebug();
+
+    // Version 1.2 Extended Curve Run Upgrade
+    // Set unbiased comparison
+    difTime = blkTime - cntTime;
+    // Run Curve
+    while(difTime > (minuteRounds * 60)) {
+        // Break loop after +5 minutes, otherwise time threshold will auto-break loop
+        if (minuteRounds > 12){
+            fCRVreset = true;
+            break;
+        }
+        // Drop difficulty per round
+        TerminalAverage /= difCurve;
+        // Simulate retarget for sanity
+        VRX_Simulate_Retarget();
+        // Increase Curve per round
+        difCurve ++;
+        // Move up an hour per round
+        minuteRounds ++;
+    }
+
+    return;
+}
+
+void VRX_Dry_Run(const CBlockIndex* pindexLast)
+{
+    // Reset difficulty for payments update
+    if(pindexLast->GetBlockTime() > 0)
     {
-        difTimePoS = cntTime - prvTime;
+        // Do nothing (until update go-live)
+    }
 
-        // Debug print toggle
-        if(fDebug) VRXswngPoSdebug();
-        // Normal Run
-        else if(!fDebug)
+    // Test Fork
+    if (nLiveForkToggle != 0) {
+        if(pindexLast->nHeight+1 >= nLiveForkToggle)
         {
-            if(difTimePoS > 1 * 60 * 60) { TerminalAverage /= 2; }
-            if(difTimePoS > 2 * 60 * 60) { TerminalAverage /= 2; }
-            if(difTimePoS > 3 * 60 * 60) { TerminalAverage /= 2; }
-            if(difTimePoS > 4 * 60 * 60) { TerminalAverage /= 2; }
+            if(pindexLast->nHeight+1 <= nLiveForkToggle+10) {
+                fDryRun = true;
+                return; // diff reset
+            }
         }
     }
-    else if(!fProofOfStake)
-    {
-        difTimePoW = cntTime - prvTime;
 
-        // Debug print toggle
-        if(fDebug) VRXswngPoWdebug();
-        // Normal Run
-        else if(!fDebug)
-        {
-            if(difTimePoW > 1 * 60 * 60) { TerminalAverage /= 2; }
-            if(difTimePoW > 2 * 60 * 60) { TerminalAverage /= 2; }
-            if(difTimePoW > 3 * 60 * 60) { TerminalAverage /= 2; }
-            if(difTimePoW > 4 * 60 * 60) { TerminalAverage /= 2; }
-        }
-    }
+    // Standard, non-Dry Run
+    fDryRun = false;
     return;
 }
 
 unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    const CBigNum bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
+    // Set base values
+    bnVelocity = fProofOfStake ? bnProofOfStakeLimit : Params().ProofOfWorkLimit();
 
-    // Check for blocks to index | Allowing for diff reset
-    if (pindexLast->nHeight-5 <= nLiveForkToggle) {
-        LogPrintf("Section 5: Cleared \n");
-        return bnVelocity.GetCompact(); // reset diff
-    }
+    // Differentiate PoW/PoS prev block
+    BlockVelocityType = GetLastBlockIndex(pindexLast, fProofOfStake);
 
-    // Check for chain stall, allowing for min diff reset
-    // If the new block's timestamp is more than 2 * target spacing
-    // then allow mining of a min-difficulty block.
-    if (GetAdjustedTime() > pindexLast->GetBlockTime() + (DSrateNRM * 2)) { // 10 minutes allow min-diff stall catch
-        LogPrintf("Section 6: Cleared \n");
-        // Min-diff activation after block xxxxxxx
-        if (nLiveForkToggle > 0) {
-            if (pindexLast->nHeight+1 > nLiveForkToggle) { // Selectable
-                LogPrintf("Section 7: Cleared \n");
-                return bnVelocity.GetCompact(); // reset diff
-            }
-        }
-    }
-
-    // Only select last non-min-diff block when retargeting
-    // This negates a chain reset when a min-diff block is allowed
-    //
-    // Set min-diff check values
-    pindexNonMinDiff = GetLastBlockIndex(pindexLast, fProofOfStake); // Differentiate PoW/PoS prev block
-    pindexMinPoSDiff = pindexLast; // Set Min PoS diff block
-    pindexMinPoWDiff = pindexLast; // Set Min PoW diff block
-    bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
-    int64_t nMinDiffTemptIndexBlock = 0;
-    int64_t nMinPoSDiffIndexBlock = pindexLast->nHeight - 110;
-    int64_t nMinPoWDiffIndexBlock = pindexLast->nHeight - 1;
-    // Index back to first non-min PoW/PoS diff for reference
-    if(fProofOfStake){
-        LogPrintf("Section 8: Cleared \n");
-        while(nMinPoSDiffIndexBlock > nMinDiffTemptIndexBlock){
-            pindexMinPoSDiff = pindexMinPoSDiff->pprev;
-            // LogPrintf("Section 9: Cleared, block index height: %u \n", uint64_t(pindexMinPoSDiff->nHeight));
-            if(pindexMinPoSDiff->nHeight <= 110){
-                break;
-            }
-            nMinDiffTemptIndexBlock ++;
-        }
-        bnMinPoSDiff.SetCompact(pindexMinPoSDiff->nBits);
-        LogPrintf("Section 10: Cleared, block nbits value: %u \n", uint64_t(pindexMinPoSDiff->nBits));
-        // Min-diff index skip after block xxxxxxx
-        if (nLiveForkToggle > 0) {
-            if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
-                // Check whether the selected block is min-diff
-                while(bnNonMinDiff.GetCompact() <= bnMinPoSDiff.GetCompact()) {
-                    // Index backwards until a non-min-diff block is found
-                    pindexNonMinDiff = pindexNonMinDiff->pprev;
-                    bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
-                    LogPrintf("Section 11: Cleared, selected block diff: %u | indexed block diff: %u \n", uint64_t(bnNonMinDiff.GetCompact()), uint64_t(bnMinPoSDiff.GetCompact()));
-                    // Break out of loop once non-min-diff is found, stop at limiter
-                    if (bnNonMinDiff.GetCompact() > bnMinPoSDiff.GetCompact() || pindexNonMinDiff->nHeight < nLiveForkToggle) {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else{
-        LogPrintf("Section 12: Cleared \n");
-        while(nMinPoWDiffIndexBlock > nMinDiffTemptIndexBlock){
-            pindexMinPoWDiff = pindexMinPoWDiff->pprev;
-            // LogPrintf("Section 13: Cleared, block index height: %u \n", uint64_t(pindexMinPoWDiff->nHeight));
-            if(pindexMinPoWDiff->nHeight <= 1){
-                break;
-            }
-            nMinDiffTemptIndexBlock ++;
-        }
-        bnMinPoWDiff.SetCompact(pindexMinPoWDiff->nBits);
-        LogPrintf("Section 14: Cleared, block nbits value: %u \n", uint64_t(pindexMinPoWDiff->nBits));
-        // Min-diff index skip after block xxxxxxx
-        if (nLiveForkToggle > 0) {
-            if (pindexLast->nHeight > nLiveForkToggle) { // Selectable
-                // Check whether the selected block is min-diff
-                while(bnNonMinDiff.GetCompact() <= bnMinPoWDiff.GetCompact()) {
-                    // Index backwards until a non-min-diff block is found
-                    pindexNonMinDiff = pindexNonMinDiff->pprev;
-                    bnNonMinDiff.SetCompact(pindexNonMinDiff->nBits);
-                    LogPrintf("Section 11: Cleared, selected block diff: %u | indexed block diff: %u \n", uint64_t(bnNonMinDiff.GetCompact()), uint64_t(bnMinPoWDiff.GetCompact()));
-                    // Break out of loop once non-min-diff is found, stop at limiter
-                    if (bnNonMinDiff.GetCompact() > bnMinPoWDiff.GetCompact() || pindexNonMinDiff->nHeight < nLiveForkToggle) {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    // Log PoW/PoS prev block
-    BlockVelocityType = pindexNonMinDiff;
+    // Check for a dry run
+    VRX_Dry_Run(pindexLast);
+    if(fDryRun) { return bnVelocity.GetCompact(); }
 
     // Run VRX threadcurve
     VRX_ThreadCurve(pindexLast, fProofOfStake);
+    if (fCRVreset) { return bnVelocity.GetCompact(); }
 
-    // Retarget
-    TerminalFactor *= TerminalAverage;
-    difficultyfactor = TerminalFactor;
-    bnOld.SetCompact(BlockVelocityType->nBits);
-    bnNew = bnOld / difficultyfactor;
-    bnNew *= 10000;
+    // Retarget using simulation
+    VRX_Simulate_Retarget();
 
     // Limit
-    if (bnNew > bnVelocity)
-      bnNew = bnVelocity;
+    if (bnNew > bnVelocity) { bnNew = bnVelocity; }
 
     // Final log
     oldBN = bnOld.GetCompact();
@@ -1506,10 +1455,8 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 {
     /* DarkGravityWave v3 retarget difficulty starts initial retarget */
     retarget = DIFF_DGW;
-    LogPrintf("Section 1: Cleared \n");
 
     // Turn off VRX/Velocity fork toggles
-    LogPrintf("Section 2: Cleared \n");
     VELOCITY_TDIFF = 9999999;
     VELOCITY_TOGGLE = 9999999;
 
@@ -1517,7 +1464,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     {
         if(pindexLast->nHeight+1 >= nLiveForkToggle)
         {
-            LogPrintf("Section 3: Cleared \n");
             VELOCITY_TDIFF = nLiveForkToggle;
             VELOCITY_TOGGLE = nLiveForkToggle+50;
             retarget = DIFF_VRX;
@@ -1527,7 +1473,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     // Retarget using DGW-v3
     if (retarget == DIFF_DGW)
     {
-        LogPrintf("Section 90: Cleared \n");
         // debug info for testing
         if(fDebug) GNTdebug();
         return DarkGravityWave(pindexLast, fProofOfStake);
@@ -1536,7 +1481,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     // Retarget using VRX
     if (retarget == DIFF_VRX)
     {
-        LogPrintf("Section 4: Cleared \n");
         // debug info for testing
         if(fDebug) GNTdebug();
         return VRX_Retarget(pindexLast, fProofOfStake);
@@ -1544,7 +1488,6 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 
     // Retarget using Terminal-Velocity
     // debug info for testing
-    LogPrintf("Section 100: Cleared \n");
     if(fDebug) GNTdebug();
     return VRX_Retarget(pindexLast, fProofOfStake);
 }
