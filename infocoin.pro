@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = Infocoin-qt
-VERSION = 1.0.2.0
+VERSION = 1.0.2.1
 INCLUDEPATH += src src/json src/qt
 QT += core gui widgets network
 DEFINES += ENABLE_WALLET
@@ -249,6 +249,7 @@ HEADERS += src/qt/infocoingui.h \
     src/ui_interface.h \
     src/qt/rpcconsole.h \
     src/qt/blockbrowser.h \
+src/qt/resources.h \
     src/version.h \
     src/velocity.h \
     src/netbase.h \
@@ -329,6 +330,7 @@ SOURCES += src/qt/infocoin.cpp src/qt/infocoingui.cpp \
     src/qt/paymentserver.cpp \
     src/qt/rpcconsole.cpp \
     src/qt/blockbrowser.cpp \
+src/qt/resources.cpp \
     src/noui.cpp \
     src/kernel.cpp \
     src/scrypt-arm.S \
@@ -354,6 +356,7 @@ FORMS += \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui \
     src/qt/forms/blockbrowser.ui \
+src/qt/forms/resources.ui \
     src/qt/forms/optionsdialog.ui
 
 contains(USE_QRCODE, 1) {

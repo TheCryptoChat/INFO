@@ -125,32 +125,6 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QPushButton" name="pushButton_bitcointalk">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>125</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>BitcoinTalk</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <property name="bottomMargin">
             <number>0</number>
@@ -159,7 +133,7 @@
             <widget class="QPushButton" name="pushButton_infocoinfrm">
              <property name="minimumSize">
               <size>
-               <width>0</width>
+               <width>100</width>
                <height>25</height>
               </size>
              </property>
@@ -177,6 +151,32 @@
           </layout>
          </item>
          <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="pushButton_bitcointalk">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>125</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>BitcoinTalk</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <property name="bottomMargin">
             <number>0</number>
@@ -185,7 +185,7 @@
             <widget class="QPushButton" name="pushButton_garden">
              <property name="minimumSize">
               <size>
-               <width>0</width>
+               <width>100</width>
                <height>25</height>
               </size>
              </property>
@@ -241,7 +241,7 @@
             <widget class="QPushButton" name="pushButton_discord">
              <property name="minimumSize">
               <size>
-               <width>0</width>
+               <width>100</width>
                <height>25</height>
               </size>
              </property>
@@ -272,6 +272,19 @@
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>

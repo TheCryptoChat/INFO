@@ -85,7 +85,7 @@ InfocoinGUI::InfocoinGUI(QWidget *parent):
     nWeight(0),
     blockBrowserPage(0)
 {
-    resize(825, 550); // Corrected BE page layout, wallet is now cleaner and more compact
+    resize(925, 550); // Layout Size
     setWindowTitle(tr("Infocoin") + " - " + tr("Wallet"));
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/infocoin"));
@@ -138,6 +138,8 @@ InfocoinGUI::InfocoinGUI(QWidget *parent):
 
     QWidget *centralWidget = new QWidget();
     QVBoxLayout *centralLayout = new QVBoxLayout(centralWidget);
+    centralLayout->setContentsMargins(0,0,0,0);
+    centralWidget->setContentsMargins(0,0,0,0);
 #ifndef Q_OS_MAC
     centralLayout->addWidget(appMenuBar);
 #endif
@@ -390,14 +392,20 @@ void InfocoinGUI::createToolBars()
     toolbar = new QToolBar(tr("Tabs toolbar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
-    QWidget* header = new QWidget();
-    if (!fUseBlackTheme)
-        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { background-color: #2bb9bc; border: none }");
-    else if (fUseBlackTheme)
-        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { background-color: #2bb9bc; border: none }");
-    header->setMinimumSize(160, 116);
+    toolbar->setObjectName("tabs");
+    toolbar->setIconSize(QSize(24,24));
+    if (!fUseBlackTheme) {
+        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { border: none }");
+    } else {
+        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { background: rgb(30,32,36); border: none }");
+    }
+
+    QLabel* header = new QLabel();
+    header->setMinimumSize(142, 142);
     header->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    header->setStyleSheet("QWidget { background-repeat: no-repeat; background-image: url(:/images/header); background-position: top center; }");
+    header->setPixmap(QPixmap(":/images/header"));
+    header->setMaximumSize(142,142);
+    header->setScaledContents(true);
     toolbar->addWidget(header);
 
     toolbar->addAction(overviewAction);
@@ -416,14 +424,8 @@ void InfocoinGUI::createToolBars()
 
     addToolBar(Qt::LeftToolBarArea, toolbar);
 
-    int w = 0;
-
     foreach(QAction *action, toolbar->actions()) {
-        w = std::max(w, toolbar->widgetForAction(action)->width());
-    }
-
-    foreach(QAction *action, toolbar->actions()) {
-        toolbar->widgetForAction(action)->setFixedWidth(w);
+        toolbar->widgetForAction(action)->setFixedWidth(145);
     }
 }
 
