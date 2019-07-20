@@ -37,7 +37,7 @@ const std::string CLIENT_NAME("Infocoin");
 #define GIT_ARCHIVE 1
 #ifdef GIT_ARCHIVE
 #    define GIT_COMMIT_ID "-Infocoin"
-#    define GIT_COMMIT_DATE "Mar 29, 2019"
+#    define GIT_COMMIT_DATE "Jul 19, 2019"
 #endif
 
 #define BUILD_DESC_FROM_COMMIT(maj,min,rev,build,commit) \

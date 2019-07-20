@@ -17,10 +17,6 @@ int VelocityI(int nHeight)
 {
     int i = 0;
     i --;
-    // Initially turn off Velocity fork toggle
-    if( nLiveForkToggle+50 > nHeight || nLiveForkToggle == 0){
-        return i;
-    }
     BOOST_FOREACH(int64_t h, VELOCITY_HEIGHT)
     if( nHeight >= h )
       i++;
@@ -151,7 +147,7 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
     }
     else if(OLDstamp < OLDvalstamp || TXstampO < OLDvalstamp)
     {
-        if(nHeight > nLiveForkToggle+50)
+        if(nHeight > VELOCITY_HEIGHT[i])
         {
             LogPrintf("DENIED: Block timestamp is not logical\n");
             return false;

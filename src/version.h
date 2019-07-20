@@ -30,7 +30,7 @@ static const int DATABASE_VERSION = 70000;
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 60032;
+static const int PROTOCOL_VERSION = 60033;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 200;
@@ -45,6 +45,12 @@ static const int CADDR_TIME_VERSION = 30000;
 // only request blocks from nodes outside this range of versions
 static const int NOBLKS_VERSION_START = 0;
 static const int NOBLKS_VERSION_END = 60029;
+
+// hard cutoff time for legacy network connections
+static const int64_t HRD_LEGACY_CUTOFF = 1564761600; // ON (08/02/2019 @ 4:00pm UTC)
+
+// hard cutoff time for future network connections
+static const int64_t HRD_FUTURE_CUTOFF = 9993058800; // OFF (NOT TOGGLED)
 
 // BIP 0031, pong message, is enabled for all versions AFTER this one
 static const int BIP0031_VERSION = 60000;

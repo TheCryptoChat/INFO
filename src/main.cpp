@@ -996,10 +996,8 @@ int64_t GetProofOfWorkReward(int64_t nFees, int nHeight)
         return nSubsidy + nFees;
     }
 
-    if(nLiveForkToggle > 0){
-        if(pindexBest->nHeight > nLiveForkToggle){// Selectable
-            nSubsidy /= 2;
-        }
+    if(pindexBest->GetBlockTime() > 1564761600){ // ON (08/02/2019 @ 4:00pm UTC)
+        nSubsidy /= 2;
     }
 
     return nSubsidy + nFees;
@@ -1092,9 +1090,6 @@ CBigNum bnOld;
 CBigNum bnNew;
 std::string difType ("");
 unsigned int retarget = DIFF_VRX; // Default with VRX
-int64_t VELOCITY_TOGGLE = 0;
-int64_t VELOCITY_TDIFF = 0;
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1109,7 +1104,7 @@ void VRXswngdebug()
 {
     // Print for debugging
     LogPrintf("Previously discovered %s block: %u: \n",difType.c_str(),prvTime);
-    LogPrintf("Current block-time: %u: \n",difType.c_str(),cntTime);
+    LogPrintf("Current block-time: %u: \n",cntTime);
     LogPrintf("Time since last %s block: %u: \n",difType.c_str(),difTime);
     debugminuteRounds = minuteRounds;
     debugTerminalAverage = TerminalAverage;
@@ -1456,18 +1451,9 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     /* DarkGravityWave v3 retarget difficulty starts initial retarget */
     retarget = DIFF_DGW;
 
-    // Turn off VRX/Velocity fork toggles
-    VELOCITY_TDIFF = 9999999;
-    VELOCITY_TOGGLE = 9999999;
-
-    if(nLiveForkToggle != 0)
+    if(pindexBest->GetBlockTime() > 1564761600) // ON (08/02/2019 @ 4:00pm UTC)
     {
-        if(pindexLast->nHeight+1 >= nLiveForkToggle)
-        {
-            VELOCITY_TDIFF = nLiveForkToggle;
-            VELOCITY_TOGGLE = nLiveForkToggle+50;
-            retarget = DIFF_VRX;
-        }
+        retarget = DIFF_VRX;
     }
 
     // Retarget using DGW-v3
@@ -3254,12 +3240,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-        if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
+        if(pfrom->nVersion <= (PROTOCOL_VERSION - 1))
         {
-            // disconnect from peers older than this proto version
-            LogPrintf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString(), pfrom->nVersion);
-            pfrom->fDisconnect = true;
-            return false;
+            if(pindexBest->GetBlockTime() > HRD_LEGACY_CUTOFF)
+            {
+                // disconnect from peers older than legacy cutoff allows : Disconnect message 02
+                LogPrintf("partner %s using obsolete version %i; disconnecting DCM:02\n", pfrom->addr.ToString(), pfrom->nVersion);
+                pfrom->fDisconnect = true;
+                return false;
+            }
+            else if(pfrom->nVersion < MIN_PEER_PROTO_VERSION)
+            {
+                // disconnect from peers older than this proto version : Disconnect message 01
+                LogPrintf("partner %s using obsolete version %i; disconnecting DCM:01\n", pfrom->addr.ToString(), pfrom->nVersion);
+                pfrom->fDisconnect = true;
+                return false;
+            }
         }
 
         if (pfrom->nVersion == 10300)
