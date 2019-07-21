@@ -34,6 +34,7 @@
 #include "ui_interface.h"
 #include "miner.h"
 #include "blockbrowser.h"
+#include "resources.h"
 
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.h"
@@ -84,7 +85,7 @@ InfocoinGUI::InfocoinGUI(QWidget *parent):
     nWeight(0),
     blockBrowserPage(0)
 {
-    resize(825, 550); // Corrected BE page layout, wallet is now cleaner and more compact
+    resize(925, 550); // Layout Size
     setWindowTitle(tr("Infocoin") + " - " + tr("Wallet"));
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/infocoin"));
@@ -111,8 +112,7 @@ InfocoinGUI::InfocoinGUI(QWidget *parent):
     // Create tabs
     overviewPage = new OverviewPage();
     blockBrowserPage = new BlockBrowser(this);
-
-
+    resourcesPage = new Resources(this);
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
     transactionView = new TransactionView(this);
@@ -134,9 +134,12 @@ InfocoinGUI::InfocoinGUI(QWidget *parent):
     centralStackedWidget->addWidget(receiveCoinsPage);
     centralStackedWidget->addWidget(sendCoinsPage);
     centralStackedWidget->addWidget(blockBrowserPage);
+    centralStackedWidget->addWidget(resourcesPage);
 
     QWidget *centralWidget = new QWidget();
     QVBoxLayout *centralLayout = new QVBoxLayout(centralWidget);
+    centralLayout->setContentsMargins(0,0,0,0);
+    centralWidget->setContentsMargins(0,0,0,0);
 #ifndef Q_OS_MAC
     centralLayout->addWidget(appMenuBar);
 #endif
@@ -277,6 +280,12 @@ void InfocoinGUI::createActions()
     blockAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(blockAction);
 
+    resourceAction = new QAction(QIcon(":/icons/resources"), tr("&Resources"), this);
+    resourceAction->setToolTip(tr("Links and Resources"));
+    resourceAction->setCheckable(true);
+    resourceAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+    tabGroup->addAction(resourceAction);
+
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -289,6 +298,8 @@ void InfocoinGUI::createActions()
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
     connect(blockAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(blockAction, SIGNAL(triggered()), this, SLOT(gotoBlockBrowser()));
+    connect(resourceAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(resourceAction, SIGNAL(triggered()), this, SLOT(gotoResources()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setToolTip(tr("Quit application"));
@@ -381,16 +392,21 @@ void InfocoinGUI::createToolBars()
     toolbar = new QToolBar(tr("Tabs toolbar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
-    QWidget* header = new QWidget();
-    if (!fUseBlackTheme)
-        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { background-color: #2bb9bc; border: none }");
-    else if (fUseBlackTheme)
-        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { background-color: #2bb9bc; border: none }");
-    header->setMinimumSize(160, 116);
+    toolbar->setObjectName("tabs");
+    toolbar->setIconSize(QSize(24,24));
+    if (!fUseBlackTheme) {
+        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { border: none }");
+    } else {
+        toolbar->setStyleSheet("QToolButton { font-weight:bold;} QToolButton:hover { background-color: #00989b } QToolButton:checked { background-color: #663399} QToolButton:pressed { background-color: #131313 } #tabs { background: rgb(30,32,36); border: none }");
+    }
+
+    QLabel* header = new QLabel();
+    header->setMinimumSize(142, 142);
     header->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    header->setStyleSheet("QWidget { background-repeat: no-repeat; background-image: url(:/images/header); background-position: top center; }");
+    header->setPixmap(QPixmap(":/images/header"));
+    header->setMaximumSize(142,142);
+    header->setScaledContents(true);
     toolbar->addWidget(header);
-//    toolbar->addWidget(makeToolBarSpacer());
 
     toolbar->addAction(overviewAction);
     toolbar->addAction(receiveCoinsAction);
@@ -398,32 +414,18 @@ void InfocoinGUI::createToolBars()
     toolbar->addAction(historyAction);
     toolbar->addAction(addressBookAction);
     toolbar->addAction(blockAction);
+    toolbar->addAction(resourceAction);
     toolbar->addAction(openRPCConsoleAction);
 
     toolbar->addWidget(makeToolBarSpacer());
-
-    //QWidget* mineWidget = new QWidget();
-    //mineWidget->setMinimumSize(160,40);
-    //mineWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    //mineWidget->setObjectName("mineWidget");
-    //mineWidget->setStyleSheet("#mineWidget");
-    //QVBoxLayout *mbox = new QVBoxLayout();
-    //mineWidget->setLayout(mbox);
-    //toolbar->addWidget(mineWidget);
 
     toolbar->setOrientation(Qt::Vertical);
     toolbar->setMovable(false);
 
     addToolBar(Qt::LeftToolBarArea, toolbar);
 
-    int w = 0;
-
     foreach(QAction *action, toolbar->actions()) {
-        w = std::max(w, toolbar->widgetForAction(action)->width());
-    }
-
-    foreach(QAction *action, toolbar->actions()) {
-        toolbar->widgetForAction(action)->setFixedWidth(w);
+        toolbar->widgetForAction(action)->setFixedWidth(145);
     }
 }
 
@@ -483,6 +485,7 @@ void InfocoinGUI::setWalletModel(WalletModel *walletModel)
         sendCoinsPage->setModel(walletModel);
         signVerifyMessageDialog->setModel(walletModel);
         blockBrowserPage->setModel(clientModel);
+        resourcesPage->setModel(clientModel);
 
         setEncryptionStatus(walletModel->getEncryptionStatus());
         connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
@@ -836,6 +839,14 @@ void InfocoinGUI::gotoBlockBrowser(QString transactionId)
     exportAction->setEnabled(true);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
     connect(exportAction, SIGNAL(triggered()), blockBrowserPage, SLOT(exportClicked()));
+}
+
+void InfocoinGUI::gotoResources()
+{
+    resourceAction->setChecked(true);
+    centralStackedWidget->setCurrentWidget(resourcesPage);
+
+    exportAction->setEnabled(false);
 }
 
 void InfocoinGUI::gotoReceiveCoinsPage()

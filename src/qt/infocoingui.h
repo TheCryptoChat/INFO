@@ -3,9 +3,7 @@
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>
-
 #include <stdint.h>
-#include "blockbrowser.h"
 
 class TransactionTableModel;
 class ClientModel;
@@ -18,6 +16,7 @@ class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
 class BlockBrowser;
+class Resources;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -71,6 +70,7 @@ private:
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
     BlockBrowser *blockBrowserPage;
+    Resources *resourcesPage;
 
 
     QLabel *labelEncryptionIcon;
@@ -103,6 +103,7 @@ private:
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
     QAction *blockAction;
+    QAction *resourceAction;
     QPushButton *stakingButton;
 
     QSystemTrayIcon *trayIcon;
@@ -168,6 +169,8 @@ private slots:
     void gotoSendCoinsPage();
     /** Show block explorer page */
     void gotoBlockBrowser(QString transactionId = "");
+    /** Show resources page */
+    void gotoResources();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

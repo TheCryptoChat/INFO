@@ -21,6 +21,7 @@
 enum DiffMode {
     DIFF_DEFAULT = 0, // Default to invalid 0
     DIFF_DGW     = 1, // Retarget using DarkGravityWave v3
+    DIFF_VRX     = 2, // Retarget using Terminal-Velocity-RateX
 };
 
 class CBlock;
@@ -53,17 +54,40 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const int64_t MIN_TX_FEE = 0.00001 * COIN;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
 static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
+/** Minimum TX count (for relaying) */
+static const int64_t MIN_TX_COUNT = 0;
+/** Minimum TX value (for relaying) */
+static const int64_t MIN_TX_VALUE = 0.01 * COIN;
 /** No amount larger than this (in satoshi) is valid */
 static const int64_t MAX_MONEY = 2500000000 * COIN; // 2.5 Billlion INFO same as hardcap
+/** Money Range params */
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+/** Protocol 2.1 toggle */
+inline bool IsProtocolV2_1(int64_t nTime) { return TestNet() || nTime > 9993058800; } // OFF
 /** FutureDrift parameters */
-inline int64_t FutureDrift(int64_t nTime, int nHeight) { return nTime + 15 * 60; }
+inline int64_t TimeDrift() { return 15 * 60; } // Default time drift window
+/** Initial future drift */
+inline int64_t FutureDriftV1(int64_t nTime) { return nTime + TimeDrift(); } // Protocol-v2
+/** Tightened future drift */
+inline int64_t FutureDriftV2(int64_t nTime) { return nTime + (TimeDrift() - (5 * 60)); } // Protocol-v2.1
+/** FutureDrift returned value */
+inline int64_t FutureDrift(int64_t nTime, int nHeight) { return IsProtocolV2_1(nHeight) ? FutureDriftV2(nTime) : FutureDriftV1(nTime); }
 /** Block target spacing defines */
 inline unsigned int GetTargetSpacing(int nHeight) {return 5 * 60; }
 /** PoS Reward */
 static const int64_t COIN_YEAR_REWARD = 10 * CENT; // 10% Annual
+/** Velocity toggle block */
+static const int64_t VELOCITY_TOGGLE = 350000; // Implementation of the Velocity system into the chain.
+/** Velocity retarget toggle block */
+static const int64_t VELOCITY_TDIFF = 9999999; // Use Velocity's retargetting method (Height).
+/** Block spacing preferred */
+static const int64_t BLOCK_SPACING = 5 * 60;
+/** Block spacing minimum */
+static const int64_t BLOCK_SPACING_MIN = 3 * 60;
+/** Block spacing maximum */
+static const int64_t BLOCK_SPACING_MAX = 6 * 60;
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
@@ -132,6 +156,14 @@ bool SendMessages(CNode* pto, bool fSendTrickle);
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles);
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+void VRXswngdebug();
+void VRXdebug();
+void GNTdebug();
+void VRX_BaseEngine(const CBlockIndex* pindexLast, bool fProofOfStake);
+void VRX_Simulate_Retarget();
+void VRX_ThreadCurve(const CBlockIndex* pindexLast, bool fProofOfStake);
+void VRX_Dry_Run(const CBlockIndex* pindexLast);
+unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
 int64_t GetProofOfWorkReward(int64_t nFees, int nHeight);
 int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight);

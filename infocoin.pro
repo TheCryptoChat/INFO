@@ -1,6 +1,6 @@
 TEMPLATE = app
-TARGET = infocoin-qt
-VERSION = 1.0.1.0
+TARGET = Infocoin-qt
+VERSION = 1.0.2.1
 INCLUDEPATH += src src/json src/qt
 QT += core gui widgets network
 DEFINES += ENABLE_WALLET
@@ -9,6 +9,7 @@ CONFIG += no_include_pwd
 CONFIG += thread
 CONFIG += widgets
 CONFIG += static
+CONFIG += openssl
 
 QMAKE_CFLAGS += -std=c99
 QMAKE_CXXFLAGS += -fpermissive -std=gnu++11
@@ -19,15 +20,15 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 }
 
 win32{
-BOOST_LIB_SUFFIX=-mgw63-mt-s-1_63
-BOOST_INCLUDE_PATH=C:/deps/boost_1_63_0
-BOOST_LIB_PATH=C:/deps/boost_1_63_0/stage/lib
-BDB_INCLUDE_PATH=C:/deps/db-6.2.23.NC/build_unix
-BDB_LIB_PATH=C:/deps/db-6.2.23.NC/build_unix
-OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.2k/include
-OPENSSL_LIB_PATH=C:/deps/openssl-1.0.2k
+BOOST_LIB_SUFFIX=-mgw81-mt-s-x32-1_68
+BOOST_INCLUDE_PATH=C:/deps/boost_1_68_0
+BOOST_LIB_PATH=C:/deps/boost_1_68_0/stage/lib
+BDB_INCLUDE_PATH=C:/deps/db-6.2.32.NC/build_unix
+BDB_LIB_PATH=C:/deps/db-6.2.32.NC/build_unix
+OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.2o/include
+OPENSSL_LIB_PATH=C:/deps/openssl-1.0.2o
 MINIUPNPC_INCLUDE_PATH=C:/deps/
-MINIUPNPC_LIB_PATH=C:/deps/miniupnpc
+MINIUPNPC_LIB_PATH=C:/deps/miniupnpc-1.9
 QRENCODE_INCLUDE_PATH=C:/deps/qrencode-3.4.4
 QRENCODE_LIB_PATH=C:/deps/qrencode-3.4.4/.libs
 }
@@ -231,6 +232,7 @@ HEADERS += src/qt/infocoingui.h \
     src/rpcclient.h \
     src/rpcprotocol.h \
     src/rpcserver.h \
+    src/rpcvelocity.h \
     src/timedata.h \
     src/qt/overviewpage.h \
     src/qt/csvmodelwriter.h \
@@ -247,7 +249,9 @@ HEADERS += src/qt/infocoingui.h \
     src/ui_interface.h \
     src/qt/rpcconsole.h \
     src/qt/blockbrowser.h \
+src/qt/resources.h \
     src/version.h \
+    src/velocity.h \
     src/netbase.h \
     src/clientversion.h \
     src/threadsafety.h \
@@ -269,6 +273,7 @@ SOURCES += src/qt/infocoin.cpp src/qt/infocoingui.cpp \
     src/qt/infocoinaddressvalidator.cpp \
     src/chainparams.cpp \
     src/version.cpp \
+    src/velocity.cpp \
     src/sync.cpp \
     src/txmempool.cpp \
     src/util.cpp \
@@ -307,6 +312,7 @@ SOURCES += src/qt/infocoin.cpp src/qt/infocoingui.cpp \
     src/rpcmisc.cpp \
     src/rpcnet.cpp \
     src/rpcmining.cpp \
+    src/rpcvelocity.cpp \
     src/rpcwallet.cpp \
     src/rpcblockchain.cpp \
     src/rpcrawtransaction.cpp \
@@ -324,6 +330,7 @@ SOURCES += src/qt/infocoin.cpp src/qt/infocoingui.cpp \
     src/qt/paymentserver.cpp \
     src/qt/rpcconsole.cpp \
     src/qt/blockbrowser.cpp \
+src/qt/resources.cpp \
     src/noui.cpp \
     src/kernel.cpp \
     src/scrypt-arm.S \
@@ -349,6 +356,7 @@ FORMS += \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui \
     src/qt/forms/blockbrowser.ui \
+src/qt/forms/resources.ui \
     src/qt/forms/optionsdialog.ui
 
 contains(USE_QRCODE, 1) {
@@ -443,9 +451,9 @@ LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
-
-LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
-windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
+windows:LIBS += libboost_system$$BOOST_LIB_SUFFIX libboost_filesystem$$BOOST_LIB_SUFFIX libboost_program_options$$BOOST_LIB_SUFFIX libboost_thread$$BOOST_THREAD_LIB_SUFFIX
+!windows:LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX -lboost_chrono$$BOOST_LIB_SUFFIX
+windows:LIBS += libboost_chrono$$BOOST_LIB_SUFFIX
 
 contains(RELEASE, 1) {
     !windows:!macx {

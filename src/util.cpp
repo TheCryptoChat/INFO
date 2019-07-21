@@ -83,6 +83,9 @@ string strMiscWarning;
 bool fNoListen = false;
 bool fLogTimestamps = false;
 volatile bool fReopenDebugLog = false;
+//Live fork toggle
+string strLiveForkToggle = "";
+int64_t nLiveForkToggle = 0;
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;
@@ -397,7 +400,7 @@ string SanitizeString(const string& str)
     return strResult;
 }
 
-static const signed char phexdigit[256] =
+const signed char p_util_hexdigit[256] =
 { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -417,9 +420,9 @@ static const signed char phexdigit[256] =
 
 bool IsHex(const string& str)
 {
-    BOOST_FOREACH(unsigned char c, str)
+    BOOST_FOREACH(char c, str)
     {
-        if (phexdigit[c] < 0)
+        if (HexDigit(c) < 0)
             return false;
     }
     return (str.size() > 0) && (str.size()%2 == 0);
@@ -433,11 +436,11 @@ vector<unsigned char> ParseHex(const char* psz)
     {
         while (isspace(*psz))
             psz++;
-        signed char c = phexdigit[(unsigned char)*psz++];
+        signed char c = HexDigit(*psz++);
         if (c == (signed char)-1)
             break;
         unsigned char n = (c << 4);
-        c = phexdigit[(unsigned char)*psz++];
+        c = HexDigit(*psz++);
         if (c == (signed char)-1)
             break;
         n |= c;
@@ -1050,28 +1053,28 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
                    s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
                }
 
-               std::string str(s);
-               std::string rpcpass = "rpcpassword=" + str + "\n";
-               fprintf(ConfFile, rpcpass.c_str());
+               std::string str(s, 33);
+               fprintf(ConfFile, "rpcpassword=%s\n", str.c_str());
                fprintf(ConfFile, "port=42856\n");
                fprintf(ConfFile, "rpcport=42857\n");
                fprintf(ConfFile, "rpcconnect=127.0.0.1\n");
                fprintf(ConfFile, "rpcallowip=127.0.0.1\n");
-               fprintf(ConfFile, "addnode=154.16.7.188\n");
-               fprintf(ConfFile, "addnode=104.129.16.188:42856\n");
-               fprintf(ConfFile, "addnode=45.63.123.99\n");
-               fprintf(ConfFile, "addnode=108.61.117.246\n");
-               fprintf(ConfFile, "addnode=45.76.134.160\n");
-               fprintf(ConfFile, "addnode=45.77.62.184\n");
-               fprintf(ConfFile, "addnode=108.61.220.171\n");
-               fprintf(ConfFile, "addnode=45.76.87.30\n");
-               fprintf(ConfFile, "addnode=108.61.241.170\n");
-               fprintf(ConfFile, "addnode=45.32.211.168\n");
-               fprintf(ConfFile, "addnode=45.63.71.221\n");
-               fprintf(ConfFile, "addnode=45.76.249.13\n");
-               fprintf(ConfFile, "addnode=45.77.63.194\n");
-               fprintf(ConfFile, "addnode=45.76.140.35\n");
-               fprintf(ConfFile, "addnode=108.61.199.12\n");
+               fprintf(ConfFile, "addnode=138.197.168.172:42856\n");
+               //fprintf(ConfFile, "addnode=154.16.7.188\n");
+               //fprintf(ConfFile, "addnode=104.129.16.188:42856\n");
+               //fprintf(ConfFile, "addnode=45.63.123.99\n");
+               //fprintf(ConfFile, "addnode=108.61.117.246\n");
+               //fprintf(ConfFile, "addnode=45.76.134.160\n");
+               //fprintf(ConfFile, "addnode=45.77.62.184\n");
+               //fprintf(ConfFile, "addnode=108.61.220.171\n");
+               //fprintf(ConfFile, "addnode=45.76.87.30\n");
+               //fprintf(ConfFile, "addnode=108.61.241.170\n");
+               //fprintf(ConfFile, "addnode=45.32.211.168\n");
+               //fprintf(ConfFile, "addnode=45.63.71.221\n");
+               //fprintf(ConfFile, "addnode=45.76.249.13\n");
+               //fprintf(ConfFile, "addnode=45.77.63.194\n");
+               //fprintf(ConfFile, "addnode=45.76.140.35\n");
+               //fprintf(ConfFile, "addnode=108.61.199.12\n");
 
                fclose(ConfFile);
 
